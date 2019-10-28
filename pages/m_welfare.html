@@ -1,0 +1,264 @@
+<script>
+    // 数据重载
+    function m_welfare_reload() {
+        var url = "http://47.106.244.1:7777/Welfare/findAll";
+        $.ajax({
+            url:url,
+            type:'get',
+            success:function(result) {
+                if(result.status === 200) {
+                    // 将原tbody中数据清除
+                    $('#m_welfare_tbody').empty();
+                    // 追加数据
+                    result.data.forEach(function(item) {
+                        var arr = getStatus(item.status);
+                        $(`<tr>
+                            <td>
+                                <input type="checkbox" name="id" value="`+item.id+`">
+                            </td>
+                            <td>`+item.name+`</td>
+                            <td>`+item.status+`</td>
+                            <td>
+                                <button id="m_wel_btn_YorN" class="btn btn-sm btn-`+arr[0]+`">`+arr[1]+`</button>
+                            </td>
+                        </tr>`).appendTo($('#m_welfare_tbody'));
+                    });
+                }
+            }
+        });
+    }
+    // 数据重载结束
+    // 判断状态
+    function getStatus(status) {
+        if(status === '使用中') {
+            var result = ['danger','冻结']
+            return result;
+        } else {
+            var result = ['success','恢复']
+            return result;
+        }
+    }
+    // 判断状态结束
+    // 模态框关闭事件
+    function m_welfare_close() {
+        $('#m_welfare_modal').modal('hide');
+    }
+    // 模态框关闭事件结束
+// 文档加载后执行
+$(function() {
+    // 数据重载
+    m_welfare_reload();
+    // 全选
+    $('#m_welfare_thead > tr').on('click','input',function() {
+        var test = $('#m_welfare_thead > tr').find('input[name=check_all]').is(':checked');
+        if(test) {
+            $('#m_welfare_tbody').find('input[name=id]').attr('checked','checked');
+        } else {
+            $('#m_welfare_tbody').find('input[name=id]').removeAttr('checked','checked');
+        }
+    });
+    // 全选结束
+    // 改变状态
+    $('#m_welfare_tbody').on('click','#m_wel_btn_YorN',function() {
+        if($(this).text() === '冻结') {
+            $(this).text('恢复');
+            var id = $(this).parents('tr').find('input[name=id]').val();
+            var name = $(this).parents('tr').find('td').eq(1).text();
+            var status = '冻结中';
+            var data = {
+                id:id,
+                name:name,
+                status:status
+            }
+            console.log(status);
+            var url = "http://47.106.244.1:7777/Welfare/saveOrUpdate";
+            $.ajax({
+                url:url,
+                type:'post',
+                data:data,
+                success:function(result) {
+                    if(result.status === 200) {
+                        m_welfare_reload();
+                    }
+                }
+            });
+        } else {
+            $(this).text('冻结');
+            var id = $(this).parents('tr').find('input[name=id]').val();
+            var name = $(this).parents('tr').find('td').eq(1).text();
+            var status = '使用中';
+            var data = {
+                id:id,
+                name:name,
+                status:status
+            }
+            var url = "http://47.106.244.1:7777/Welfare/saveOrUpdate";
+            $.ajax({
+                url:url,
+                type:'post',
+                data:data,
+                success:function(result) {
+                    if(result.status === 200) {
+                        m_welfare_reload();
+                    }
+                }
+            });
+        }
+    });
+    // 改变状态结束
+    // 为添加按钮绑定事件
+    $('#m_wel_btn_add').click(function() {
+        // 调出模态框
+        $('#m_welfare_modal').modal('show');
+        // 清空原先数据
+        $('#m_welfare_modal').find('input[name=id]').val("");
+        $('#m_welfare_modal').find('select[name=status]').val("");
+        $('#m_welfare_modal').find('input[name=name]').val("");
+    });
+    // 为添加按钮绑定事件结束
+    // 为编辑按钮绑定事件
+    $('#m_wel_btn_edit').click(function() {
+        // 调出模态框
+        $('#m_welfare_modal').modal('show');
+        // 获取要编辑的那一行数据
+        var id = $('#m_welfare_tbody').find('input[name=id]:checked').eq(0).val();
+        var name = $('#m_welfare_tbody').find('input[name=id]:checked').eq(0).parents('tr').find('td').eq(1).text();
+        var status = $('#m_welfare_tbody').find('input[name=id]:checked').eq(0).parents('tr').find('td').eq(2).text();
+        // 将数据传入模态框中
+        $('#m_welfare_modal').find('input[name=id]').val(id);
+        $('#m_welfare_modal').find('select[name=status]').val(status);
+        $('#m_welfare_modal').find('input[name=name]').val(name);
+    });
+    // 为编辑按钮绑定事件结束
+    // 为删除按钮绑定事件
+    $('#m_wel_btn_del').click(function() {
+        var id = [];
+        $('#m_welfare_tbody').find('input[name=id]:checked').each(function(index,item) {
+            id[index] = item.value;
+        });
+        var url = "http://47.106.244.1:7777/Welfare/deleteById";
+        id.forEach(function(item,index) {
+            $.ajax({
+                url:url,
+                type:'post',
+                data:"id="+item,
+                success:function(result) {
+                    if(result.status === 200) {
+                        m_welfare_reload();
+                    }
+                }
+            });
+        });
+    });
+    // 为删除按钮绑定事件结束
+    // 为模态框添加提交事件
+    $('#m_welfare_submit').click(function() {
+        var id = $('#m_welfare_modal').find('input[name=id]').val();
+        var status = $('#m_welfare_modal').find('select[name=status]').val();
+        var name = $('#m_welfare_modal').find('input[name=name]').val();
+        var url = "http://47.106.244.1:7777/Welfare/saveOrUpdate";
+        var data;
+        if(id) {
+            data = {
+                id:id,
+                status:status,
+                name:name
+            }
+        } else {
+            data = {
+                status:status,
+                name:name
+            }
+        }
+        $.ajax({
+            url:url,
+            type:'post',
+            data:data,
+            success:function(result) {
+                if(result.status === 200) {
+                    alert(result.message);
+                    m_welfare_reload();
+                    m_welfare_close();
+                }
+            }
+        });
+    });
+    // 为模态框添加提交事件结束
+});
+</script>
+
+<!-- 内容区 -->
+<div class="container">
+    <!-- 顶部按钮及筛选行 -->
+    <div class="row mb-3">
+        <div class="col-2">
+            <select class="form-control" name="" id="">
+                <option value="" style="display: none" disabled selected>全部</option>
+            </select>
+        </div>
+        <div class="col-3 ml-auto">
+            <button id="m_wel_btn_add" class="ml-4 btn btn-primary btn-sm fa fa-info-circle"> 添加</button>
+            <button id="m_wel_btn_edit" class="btn btn-success btn-sm fa fa-edit"> 编辑</button>
+            <button id="m_wel_btn_del" class="btn btn-danger btn-sm fa fa-trash"> 删除</button>
+        </div>
+    </div>
+    <!-- / 顶部按钮及筛选行 -->
+    <!-- 表格内容区 -->
+    <div class="row">
+        <div class="col">
+            <table class="table table-hover table-striped">
+                <thead id="m_welfare_thead">
+                    <tr>
+                        <th>
+                            <input type="checkbox" name="check_all">
+                        </th>
+                        <th class="w-75">福利名称</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="m_welfare_tbody"></tbody>
+            </table>
+        </div>
+    </div>
+    <!-- / 表格内容区 -->
+</div>
+<!-- / 内容区 -->
+<!-- 模态框 -->
+<div id="m_welfare_modal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">保存地址</h5>
+                <button type="button" class="close" onclick="m_welfare_close()">
+                <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <input type="hidden" name="id" />
+                    <div class="row form-group">
+                        <label for="#m_welfare_name" class="col-2 text-right">福利</label>
+                        <div class="col-10">
+                            <input type="text" name="name" id="m_welfare_name" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row form-group">
+                        <label for="#m_welfare_status" class="col-2 text-right">状态</label>
+                        <div class="col-10">
+                            <select name="status" id="m_welfare_status" class="form-control">
+                                <option value="" style="display: none" disabled selected>状态</option>
+                                <option value="使用中">使用中</option>
+                                <option value="冻结中">冻结中</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="m_welfare_submit" type="button" class="btn btn-primary">Save change</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- / 模态框 -->

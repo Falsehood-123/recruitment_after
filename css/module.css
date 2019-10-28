@@ -1,0 +1,36 @@
+/* m_city */
+#m_city_btn {
+    position: relative;
+    height: 40px;
+}
+#m_city_btn > #city_btn_add {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+#m_city_addresses p {
+    display: inline-block;
+    cursor: pointer;
+}
+.m_ct_base {
+    display: inline-block;
+}
+/* / m_city */
+/* m_job */
+#m_job_btn {
+    position: relative;
+    height: 40px;
+}
+#m_job_btn > #job_btn_add {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+#m_job_addresses p {
+    display: inline-block;
+    cursor: pointer;
+}
+.m_job_base {
+    display: inline-block;
+}
+/* / m_job */

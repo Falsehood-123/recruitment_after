@@ -1,0 +1,151 @@
+<script>
+    // 数据重载
+    function m_city_reload() {
+        var url = "http://47.106.244.1:7777/City/findAll";
+        $.ajax({
+            url:url,
+            type:'get',
+            success:function(result) {
+                if(result.status === 200) {
+                    // 将原地址清空
+                    $('#m_city_addresses').empty();
+                    // 将数据添加到地址盒子中
+                    result.data.forEach(function(item) {
+                        $(`<div class="m_ct_base">
+                                <p id="`+item.id+`" class="ml-3 my-3">`+item.name+`</p>
+                                <button id="m_ct_btn_edit" class="btn btn-sm collapse btn-success fa fa-edit"></button>
+                                <button id="m_ct_btn_del" class="btn btn-sm collapse btn-danger fa fa-trash"></button>
+                            </div>
+                        `).appendTo($('#m_city_addresses'));
+                    });
+                }
+            }
+        });
+    }
+    // 数据重载结束
+    // 模态框关闭
+    function m_city_close() {
+        $('#m_city_modal').modal('hide');
+    }
+    // 模态框关闭结束
+// 在文档加载完全后执行
+$(function() {
+    // 数据重载
+    m_city_reload();
+    // 模态框提交事件
+    $('#m_city_submit').click(function() {
+        var url = "http://47.106.244.1:7777/City/saveOrUpdate";
+        var id = $('#m_city_modal').find('input[name=id]').val();
+        var name = $('#m_city_modal').find('input[name=name]').val();
+        var data;
+        if(id) {
+            data = {
+                id:id,
+                name:name
+            }
+        } else {
+            data = {name:name}
+        }
+        $.ajax({
+            url:url,
+            type:'post',
+            data:data,
+            success:function(result) {
+                if(result.status === 200) {
+                    alert(result.message);
+                    m_city_reload();
+                    m_city_close();
+                }
+            }
+        });
+    });
+    // 模态框提交事件结束
+    // 显示按钮事件
+    $('#m_city_addresses').on('click','p',function() {
+        $(this).parent('div.m_ct_base').siblings().find('button').collapse('hide');
+        $(this).siblings('button').collapse("toggle");
+    });
+    // 显示按钮事件结束
+    // 添加删除事件
+    $('#m_city_addresses').on('click','#m_ct_btn_del',function() {
+        var id = $(this).siblings('p').attr('id');
+        var url = "http://47.106.244.1:7777/City/deleteById";
+        $.ajax({
+            url:url,
+            type:'post',
+            data:"id="+id,
+            success:function(result) {
+                if(result.status === 200) {
+                    m_city_reload();
+                }
+            }
+        });
+    });
+    // 添加删除事件结束
+    // 添加编辑事件
+    $('#m_city_addresses').on('click','#m_ct_btn_edit',function() {
+        // 调出模态框
+        $('#m_city_modal').modal('show');
+        // 将这个数据传给模态框中
+        $('#m_city_modal').find('input[name=id]').val($(this).siblings('p').attr('id'));
+        $('#m_city_modal').find('input[name=name]').val($(this).siblings('p').text());
+    });
+    // 添加编辑事件结束
+    // 为添加城市按钮添加事件
+    $('#city_btn_add').click(function() {
+        // 显示模态框
+        $('#m_city_modal').modal('show');
+        // 将原数据清空
+        $('#m_city_modal').find('input[name=id]').val("");
+        $('#m_city_modal').find('input[name=name]').val("");
+    });
+    // 为添加按钮城市添加事件结束
+});
+</script>
+
+<div class="container">
+    <!-- 顶部按钮行 -->
+    <div class="row">
+        <div id="m_city" class="col-10"></div>
+        <div id="m_city_btn" class="col-2">
+            <button id="city_btn_add" class="btn btn-success btn-sm fa fa-info-circle"> 添加城市</button>
+        </div>
+    </div>
+    <!-- / 顶部按钮行 -->
+    <div class="row mt-3">
+        <div class="col bg-dark">
+            <span class="text-light">地址</span>
+        </div>
+    </div>
+    <div class="row border border-dark">
+        <div id="m_city_addresses" class="col"></div>
+    </div>
+</div>
+<!-- 模态框 -->
+<div id="m_city_modal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">保存地址</h5>
+                <button type="button" class="close" onclick="m_city_close()">
+                <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <input type="hidden" name="id" />
+                    <div class="row form-group">
+                        <label for="#m_city_name" class="col-2 text-right">地址</label>
+                        <div class="col-10">
+                            <input type="text" name="name" id="m_city_name" class="form-control">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="m_city_submit" type="button" class="btn btn-primary">Save change</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- / 模态框 -->

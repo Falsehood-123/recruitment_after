@@ -1,0 +1,317 @@
+<script>
+    // 数据重载
+    function reloadData() {
+        var url = "http://47.106.244.1:7777/EmploymentJobhunter/findAll";
+        $.ajax({
+            url:url,
+            type:'get',
+            success:function(result) {
+                if(result.status === 200) {
+                    // 清空原列表数据
+                    $('#job_contact_tbody').empty();
+                    result.data.forEach(function(item) {
+                        getJobhunters(item.id,item.jobhunterId,item.employmentId,item.askTime,item.remark);
+                    });
+                }
+            }
+        });
+    }
+    // 数据重载结束
+    // 获取时间
+    function dateParse(dataString) {
+		if(dataString){
+		    let date = new Date(dataString);
+		    let Y = date.getFullYear() + '-';
+		    let M = (date.getMonth()+1 < 10 ? '0'+(date.getMonth()+1) : date.getMonth()+1) + '-';
+		    let D = (date.getDate()< 10 ? '0'+date.getDate() : date.getDate())+' ';
+		    let h = (date.getHours()< 10 ? '0'+date.getHours() : date.getHours())+ ':';
+		    let m = (date.getMinutes()< 10 ? '0'+date.getMinutes() : date.getMinutes())+ ':';
+		    let s = (date.getSeconds()< 10 ? '0'+date.getSeconds() : date.getSeconds());
+		    return Y+M+D+h+m+s;
+		} else {
+		    return '';
+		}
+	}
+    // 获取时间结束
+    // 获取求职人与联系方式
+    function getJobhunters(id,Jobid,Bussid,askTime,remark) {
+        var url = "http://47.106.244.1:7777/Jobhunter/findById";
+        $.ajax({
+            url:url,
+            type:'get',
+            data:"id="+Jobid,
+            success:function(result) {
+                if(result.status === 200) {
+                    realname = result.data.realname;
+                    telephone = result.data.telephone;
+                    getBussinesses(id,realname,telephone,Bussid,askTime,remark);
+                }
+            }
+        });
+    }
+    // 获取求职人与联系方式结束
+    // 获取求职岗位
+    function getBussinesses(id,realname,phone,Bussid,askTime,remark) {
+        var url = "http://47.106.244.1:7777/Employment/findById";
+        $.ajax({
+            url:url,
+            type:'get',
+            data:"id="+Bussid,
+            success:function(result) {
+                if(result.status === 200) {
+                    if(remark) {
+                        $(`<tr>
+                        <td>
+                            <input type="checkbox" name="id" value="`+id+`">
+                        </td>
+                        <td>`+realname+`</td>
+                        <td>`+phone+`</td>
+                        <td>`+result.data.title+`</td>
+                        <td>
+                            <a href="javascript:void(0)" id="btn_detail">查看</a>
+                        </td>
+                        <td>`+dateParse(askTime)+`</td>
+                        <td>`+remark+`</td>
+                        </tr>`).appendTo($('#job_contact_tbody'));
+                    } else {
+                        $(`<tr>
+                        <td>
+                            <input type="checkbox" name="id" value="`+id+`">
+                        </td>
+                        <td>`+realname+`</td>
+                        <td>`+phone+`</td>
+                        <td>`+result.data.title+`</td>
+                        <td>
+                            <a href="javascript:void(0)" id="btn_detail">查看</a>
+                        </td>
+                        <td>`+dateParse(askTime)+`</td>
+                        <td>
+                            <a href="javascript:void(0)" id="btn_edit">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                        </td>
+                        </tr>`).appendTo($('#job_contact_tbody'));
+                    }
+                }
+            }
+        });
+    }
+    // 获取求职岗位结束
+    // 简历模态框关闭
+    function job_contact_modal_close() {
+        $('#job_contact_modal').modal('hide');
+    }
+    // 简历模态框关闭结束
+    // 获取简历的内容
+    function getJobEdit(id) {
+        var url = "http://47.106.244.1:7777/Jobhunter/findById";
+        $.ajax({
+            url:url,
+            type:'get',
+            data:"id="+id,
+            success:function(result) {
+                if(result.status === 200) {
+                    $('#job_contact_modal').find('#job_contact_realname').text(result.data.realname);
+                    $('#job_contact_modal').find('#job_contact_gender').text(result.data.gender);
+                    $('#job_contact_modal').find('#job_contact_education').text(result.data.education);
+                    $('#job_contact_modal').find('#job_contact_birth').text(result.data.brith);
+                    $('#job_contact_modal').find('#job_contact_workTime').text(result.data.workTime);
+                    $('#job_contact_modal').modal('show');
+                }
+            }
+        });
+    }
+    // 获取简历的内容结束
+    // 为备注获取此行信息
+    function editContent(id) {
+        var url = "http://47.106.244.1:7777/EmploymentJobhunter/findById";
+        $.ajax({
+            url:url,
+            type:'get',
+            data:"id="+id,
+            success:function(result) {
+                if(result.status === 200) {
+                    $('#job_contact_edit_modal').find('input[id=job_contact_edit_id]').val(result.data.id);
+                    $('#job_contact_edit_modal').find('input[id=job_contact_edit_jobhunterId]').val(result.data.jobhunterId);
+                    $('#job_contact_edit_modal').find('input[id=job_contact_edit_employmentId]').val(result.data.employmentId);
+                    $('#job_contact_edit_modal').find('input[id=job_contact_edit_askTime]').val(result.data.askTime);
+                }
+            }
+        });
+    }
+    // 为备注获取此行信息结束
+    $(function() {
+        // 数据重载
+        reloadData();
+        // 表格中简历与标注事件
+        $('#job_contact_tbody').on('click','a',function() {
+            switch(this.id) {
+                case 'btn_detail':
+                    $('#job_contact_modal').modal('show');
+                    var id = $(this).parents('tr').find('input[name=id]').val();
+                    var url = "http://47.106.244.1:7777/EmploymentJobhunter/findById";
+                    $.ajax({
+                        url:url,
+                        type:'get',
+                        data:"id="+id,
+                        success:function(result) {
+                            if(result.status === 200) {
+                                getJobEdit(result.data.jobhunterId);
+                            }
+                        }
+                    });
+                    break;
+                case 'btn_edit':
+                    $('#job_contact_edit_modal').modal('show');
+                    var id = $(this).parents('tr').find('input[name=id]').val();
+                    editContent(id);
+                    break;
+            }
+        });
+        // 表格中简历与标注事件结束
+        // 备注模态框提交
+        $('#job_contact_edit_submit').click(function() {
+            var url = "http://47.106.244.1:7777/EmploymentJobhunter/saveOrUpdate";
+            var id = $('#job_contact_edit_modal').find('input[id=job_contact_edit_id]').val();
+            var jobhunterId = $('#job_contact_edit_modal').find('input[id=job_contact_edit_jobhunterId]').val();
+            var employmentId = $('#job_contact_edit_modal').find('input[id=job_contact_edit_employmentId]').val();
+            var askTime = $('#job_contact_edit_modal').find('input[id=job_contact_edit_askTime]').val();
+            var remark = $('#job_contact_edit_modal').find('textarea[id=job_contact_edit_remark]').val();
+            var data = {
+                id:id,
+                jobhunterId:jobhunterId,
+                employmentId:employmentId,
+                // askTime:askTime,
+                remark:remark
+            }
+            $.ajax({
+                url:url,
+                type:'post',
+                data:data,
+                success:function(result) {
+                    if(result.status === 200) {
+                        reloadData();
+                        $('#job_contact_edit_modal').modal('hide');
+                    }
+                }
+            });
+        });
+        // 备注模态框提交结束
+    });
+</script>
+
+<!-- 主体容器 -->
+<div class="main">
+    <div class="container">
+        <div class="layui-tab">
+            <ul class="layui-tab-title">
+                <li class="layui-this">求职列表</li>
+            </ul>
+        </div>
+        <div id="job_contact_cont" class="cont">
+            <div class="row my-3">
+                <div class="col">
+                    <button class="btn btn-outline-success btn-sm">待联系</button>
+                    <button class="btn btn-outline-success btn-sm">稍后联系</button>
+                    <button class="btn btn-outline-success btn-sm">已联系</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <table class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>求职人</th>
+                                <th>联系方式</th>
+                                <th>求职岗位</th>
+                                <th>简历</th>
+                                <th>申请时间</th>
+                                <th>备注</th>
+                            </tr>
+                        </thead>
+                        <tbody id="job_contact_tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- / 主体容器 -->
+<!-- 简历模态框 -->
+<div id="job_contact_modal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="container">
+                <div class="row">
+                    <div class="col-11"></div>
+                    <button type="button" class="btn col-1" onclick="job_contact_modal_close()">&times;</button>
+                </div>
+                <div class="row border-bottom border-primary">
+                    <div class="col-3">
+                        <h4 id="job_contact_realname"></h4>
+                    </div>
+                </div>
+                <div class="row my-3">
+                    <div class="col">
+                        <button class="btn btn-sm btn-primary">个人信息</button>
+                    </div>
+                </div>
+                <div class="row my-3">
+                    <div class="col-6">
+                        <div class="row">
+                            <p class="col-4 text-left">性别:</p>
+                            <p id="job_contact_gender" class="col-8"></p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="row">
+                            <p class="col-6 text-left">最高学历:</p>
+                            <p id="job_contact_education" class="col-6"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row my-3">
+                    <div class="col-6">
+                        <div class="row">
+                            <p class="col-6 text-left">出生年月:</p>
+                            <p id="job_contact_birth" class="col-6"></p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="row">
+                            <p class="col-6 text-left">工作经验:</p>
+                            <p id="job_contact_workTime" class="col-6"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- / 简历模态框 -->
+<!-- 备注模态框 -->
+<div id="job_contact_edit_modal" class="modal fade bd-example-modal-sm" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="container py-3">
+                <input type="hidden" name="id" id="job_contact_edit_id">
+                <input type="hidden" name="jobhunterId" id="job_contact_edit_jobhunterId">
+                <input type="hidden" name="employmentId" id="job_contact_edit_employmentId">
+                <input type="hidden" name="askTime" id="job_contact_edit_askTime">
+                <div class="form-group">
+                    <label for="#job_contact_edit_nextTime">下次联系时间</label>
+                    <input type="text" class="form-control" name="nextTime" id="job_contact_edit_nextTime" placeholder="联系时间">
+                </div>
+                <div class="form-group">
+                    <label for="#job_contact_edit_remark">备注</label>
+                    <textarea class="form-control" name="remark" id="job_contact_edit_remark" cols="30" rows="5" placeholder="输入备注内容..."></textarea>
+                </div>
+                <div class="form-group">
+                    <button type="button" id="job_contact_edit_submit" class="col btn btn-primary">完成</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- / 备注模态框 -->

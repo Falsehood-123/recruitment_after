@@ -1,0 +1,6 @@
+.customer_top > #btns {
+    float: right;
+}
+.customer_top > #btns > button {
+    margin-right: 1rem;
+}

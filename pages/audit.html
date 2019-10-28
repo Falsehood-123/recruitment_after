@@ -1,0 +1,29 @@
+<script>
+    $(function() {
+        $('#module_cont').load('./pages/audit_bussiness.html');
+        $('.main').on('click','li',function() {
+            if($(this).text() === '商家审核') {
+                $('#module_cont').load('./pages/audit_bussiness.html');
+            }
+            else if($(this).text() === '招聘审核') {
+                $('#module_cont').load('./pages/audit_employment.html');
+            }
+        });
+    });
+</script>
+
+<!-- 主体容器 -->
+<div class="main">
+    <div class="container">
+        <div class="layui-tab">
+            <ul class="layui-tab-title">
+                <li class="layui-this">商家审核</li>
+                <li>招聘审核</li>
+            </ul>
+        </div>
+        <div id="module_cont" class="cont">
+
+        </div>
+    </div>
+</div>
+<!-- / 主体容器 -->
